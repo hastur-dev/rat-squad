@@ -1,0 +1,28 @@
+# rat-squad extension manifest for ratterm
+# https://github.com/LecherousCthulhu/rat-squad
+
+[extension]
+name = "rat-squad"
+version = "1.0.0"
+description = "Multi-agent AI squad manager - run Claude, Aider, Codex, and Gemini in parallel with isolated git worktrees"
+author = "LecherousCthulhu"
+license = "AGPL-3.0"
+homepage = "https://github.com/LecherousCthulhu/rat-squad"
+
+[compatibility]
+ratterm = ">=1.0.0"
+
+[process]
+command = "rat-squad"
+args = ["interactive"]
+cwd = "{ext_dir}"
+restart_on_crash = true
+max_restarts = 3
+restart_delay_ms = 1000
+
+[process.env]
+RAT_SQUAD_DATA_DIR = "{ext_dir}/data"
+
+[hotkey]
+default = "f3"
+description = "Launch rat-squad AI agent manager"

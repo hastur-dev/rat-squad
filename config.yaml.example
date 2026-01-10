@@ -1,0 +1,68 @@
+# rat-squad configuration example
+# Copy this file to ~/.rat-squad/config.yaml and customize as needed
+
+# Data directory for sessions and worktrees
+# Default: ~/.local/share/rat-squad (Linux) or %LOCALAPPDATA%/rat-squad (Windows)
+data_dir: "~/.rat-squad/data"
+
+# Maximum number of concurrent sessions (1-50)
+max_sessions: 10
+
+# Default agent to use when creating new sessions
+# Options: claude, aider, codex, gemini, or any custom agent name
+default_agent: "claude"
+
+# Whether to auto-accept changes by default (yolo mode)
+# WARNING: This is dangerous! Agent will make changes without confirmation.
+default_auto_accept: false
+
+# Default base branch for creating worktrees
+# The worktree will be created from this branch
+default_base_branch: "main"
+
+# Agent configurations
+# Each agent needs a command and optional args/env
+agents:
+  # Anthropic's Claude Code
+  claude:
+    command: "claude"
+    args:
+      # Uncomment for yolo mode by default:
+      # - "--dangerously-skip-permissions"
+    env:
+      # API key is read from environment by claude itself
+      # ANTHROPIC_API_KEY: "sk-ant-..."
+
+  # Aider AI coding assistant
+  aider:
+    command: "aider"
+    args:
+      # Uncomment for yolo mode by default:
+      # - "--yes"
+    env:
+      # OPENAI_API_KEY: "sk-..."
+      # Or use Anthropic with Aider:
+      # ANTHROPIC_API_KEY: "sk-ant-..."
+
+  # OpenAI Codex CLI
+  codex:
+    command: "codex"
+    args: []
+    env:
+      # OPENAI_API_KEY: "sk-..."
+
+  # Google Gemini CLI
+  gemini:
+    command: "gemini"
+    args: []
+    env:
+      # GOOGLE_API_KEY: "..."
+
+  # Example custom agent
+  # my-custom-agent:
+  #   command: "/path/to/my-agent"
+  #   args:
+  #     - "--custom-flag"
+  #     - "--another-flag"
+  #   env:
+  #     MY_API_KEY: "..."
