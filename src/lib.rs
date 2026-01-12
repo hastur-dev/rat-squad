@@ -38,6 +38,7 @@
 pub mod agent;
 pub mod config;
 pub mod error;
+pub mod providers;
 pub mod ratterm_client;
 pub mod session;
 pub mod state;
