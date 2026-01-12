@@ -2,6 +2,7 @@
 //!
 //! Manages the user interface within ratterm's terminal.
 
+use crate::agent::AgentRegistry;
 use crate::error::{RatSquadError, Result};
 use crate::session::Session;
 use crate::state::SharedState;
@@ -43,6 +44,8 @@ pub enum UiCommand {
     },
     /// List all sessions
     ListSessions,
+    /// List available agents
+    ListAgents,
     /// Show help
     Help,
     /// Quit the extension
@@ -103,6 +106,7 @@ impl UiCommand {
                 })
             }
             "list" | "ls" | "l" => Ok(Self::ListSessions),
+            "agents" | "a" => Ok(Self::ListAgents),
             "help" | "h" | "?" => Ok(Self::Help),
             "quit" | "q" | "exit" => Ok(Self::Quit),
             _ => Err(RatSquadError::validation(format!("Unknown command: {}", parts[0]))),
@@ -150,15 +154,17 @@ Commands:
   remove <id>                  Remove a session and its worktree
   switch <id>                  Switch to a session's terminal tab
   list                         List all sessions
+  agents                       List available AI agents
   help                         Show this help message
   quit                         Exit rat-squad
 
 Agents:
-  claude  - Anthropic's Claude Code (default)
-  aider   - Aider AI coding assistant
-  codex   - OpenAI Codex
-  gemini  - Google Gemini
-  custom  - Custom agent (configure in config.yaml)
+  claude   - Anthropic's Claude Code (default)
+  chatgpt  - OpenAI ChatGPT (via shell-gpt)
+  gemini   - Google Gemini
+  aider    - Aider AI coding assistant
+  codex    - OpenAI Codex
+  custom   - Custom agent (configure in config.yaml)
 
 Options:
   --yolo, -y  Auto-accept all changes (dangerous!)
@@ -170,16 +176,48 @@ Shortcuts:
   r  = remove
   sw = switch
   l  = list
+  a  = agents
   h  = help
   q  = quit
 
 Examples:
   new feature-auth claude --yolo
-  new bugfix aider
+  new bugfix chatgpt
+  new docs gemini
   start abc12345
+  agents
   list
 "#
     .to_string()
+}
+
+/// Format the agent list with availability status
+pub fn format_agent_list(registry: &AgentRegistry) -> String {
+    let mut output = String::from("Available AI Agents:\n");
+    output.push_str("─────────────────────────────────────────────────\n");
+
+    let availability = registry.check_availability();
+
+    for avail in &availability {
+        let status_icon = if avail.is_ready() { "✓" } else { "✗" };
+        let status = avail.status_message();
+
+        output.push_str(&format!(
+            " {} {:10} - {}\n",
+            status_icon,
+            avail.agent_type.to_string(),
+            status
+        ));
+    }
+
+    output.push_str("─────────────────────────────────────────────────\n");
+    output.push_str("\nTo install missing agents:\n");
+    output.push_str("  claude:  npm install -g @anthropic-ai/claude-code\n");
+    output.push_str("  chatgpt: pip install shell-gpt\n");
+    output.push_str("  gemini:  pip install google-generativeai\n");
+    output.push_str("  aider:   pip install aider-chat\n");
+
+    output
 }
 
 /// Format the session list
@@ -256,6 +294,10 @@ impl UiHandler {
                 let sessions = state.session_manager().list_sessions();
                 Ok(format_session_list(&sessions))
             }
+            UiCommand::ListAgents => {
+                let registry = AgentRegistry::new();
+                Ok(format_agent_list(&registry))
+            }
             UiCommand::Help => Ok(format_help()),
             UiCommand::Quit => Ok("Goodbye!".to_string()),
         }
@@ -308,6 +350,24 @@ mod tests {
     fn test_parse_help_command() {
         let cmd = UiCommand::parse("help").unwrap();
         assert_eq!(cmd, UiCommand::Help);
+    }
+
+    #[test]
+    fn test_parse_agents_command() {
+        let cmd = UiCommand::parse("agents").unwrap();
+        assert_eq!(cmd, UiCommand::ListAgents);
+
+        let cmd = UiCommand::parse("a").unwrap();
+        assert_eq!(cmd, UiCommand::ListAgents);
+    }
+
+    #[test]
+    fn test_format_agent_list() {
+        let registry = AgentRegistry::new();
+        let output = format_agent_list(&registry);
+        assert!(output.contains("claude"));
+        assert!(output.contains("chatgpt"));
+        assert!(output.contains("gemini"));
     }
 
     #[test]
